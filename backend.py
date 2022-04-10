@@ -7,6 +7,11 @@ name_key = "name"
 surname_key = "surname"
 status_key = "status"
 
+from practicum import find_mcu_boards, McuBoard, PeriBoard
+devices = find_mcu_boards()
+mcu = McuBoard(devices[0])
+peri = PeriBoard(mcu)
+
 def add_profile(userid:str ,name:str, surname:str):
     # to add new profile
     with open('./data/profile.json') as f:
@@ -24,6 +29,7 @@ def add_profile(userid:str ,name:str, surname:str):
     output_file.write(json_ob)
     output_file.close
 
+#update count file
 def count_write(count : int):
     output_file = open('./data/count.txt','w')
     output_file.write(str(count))
@@ -45,43 +51,80 @@ for i in range(len(ss)):
     sta.append(ss[i][status_key])
 #print(id)
 
-inp = "123"
-count = 0
-for i in range(len(id)):
-    if(i == len(id)-1) and (id[i] != inp):
-        #not a user
-        #add new log
-        x = dt.datetime.now()
-        output_file = open('./data/enter.log','a')
-        output_file.write(x.strftime("%c")+',')
-        output_file.write(" id = "+ inp + ", NOT PASS\n")
-        output_file.close
-    elif id[i] == inp :
-        if(sta[i] == False):
-            sta[i] = True
-            #add new log
-            x = dt.datetime.now()
-            output_file = open('./data/enter.log','a')
-            output_file.write(x.strftime("%c")+',')
-            output_file.write(" id = "+ id[i] + ", PASS IN\n")
-            output_file.close
-            count += 1
-            re = 30-count
-            remain_file = open('./data/remaining.txt','w')
-            remain_file.write(str(re))
-            remain_file.closed
-            count_write(count)
-        else : 
-            sta[i] = False
-            #add new log
-            x = dt.datetime.now()
-            output_file = open('./data/enter.log','a')
-            output_file.write(x.strftime("%c")+',')
-            output_file.write(" id = " + id[i] + ", PASS OUT\n")
-            output_file.close
-            count -= 1
-            re = 30-count
-            remain_file = open('./data/remaining.txt','w')
-            remain_file.write(str(re))
-            remain_file.closed
-            count_write(count) 
+timeout = 100      
+start_time = 0
+
+while True:
+    try :
+        tmp = mcu.usb_read(request=0, length=1)
+        inp = tmp[0]
+        print(inp)
+        #inp = "123"
+        count = 0
+        for i in range(len(id)):
+            if(i == len(id)-1) and (id[i] != inp):
+                #not a user
+                #add new log
+                x = dt.datetime.now()
+                output_file = open('./data/enter.log','a')
+                output_file.write(x.strftime("%c")+',')
+                output_file.write(" id = "+ inp + ", NOT PASS\n")
+                output_file.close
+
+            elif id[i] == inp :
+                if(sta[i] == False):
+                    sta[i] = True
+
+                    #write to servo
+                    print("open")
+                    mcu.usb_write(request=1,value=1)
+                    time.sleep(2) #open for 2 sec
+                    print("close")
+                    mcu.usb_write(request-1,value=0)
+
+                    #add new log
+                    x = dt.datetime.now()
+                    output_file = open('./data/enter.log','a')
+                    output_file.write(x.strftime("%c")+',')
+                    output_file.write(" id = "+ id[i] + ", PASS IN\n")
+                    output_file.close
+
+                    #update count and remaining
+                    count += 1
+                    re = 30-count
+                    remain_file = open('./data/remaining.txt','w')
+                    remain_file.write(str(re))
+                    remain_file.closed
+                    count_write(count)
+
+                else : 
+                    sta[i] = False
+
+                    #write to servo
+                    print("open")
+                    mcu.usb_write(request=1,value=1)
+                    time.sleep(2) #open for sec
+                    print("close")
+                    mcu.usb_write(request-1,value=0)
+                    
+                    #add new log
+                    x = dt.datetime.now()
+                    output_file = open('./data/enter.log','a')
+                    output_file.write(x.strftime("%c")+',')
+                    output_file.write(" id = " + id[i] + ", PASS OUT\n")
+                    output_file.close
+
+                    #update count and remaining
+                    count -= 1
+                    re = 30-count
+                    remain_file = open('./data/remaining.txt','w')
+                    remain_file.write(str(re))
+                    remain_file.closed
+                    count_write(count) 
+
+    except Exception as err:
+        print(err)
+        print("ERROR")
+        devices = find_mcu_boards()
+        mcu = McuBoard(devices[0])
+        peri = PeriBoard(mcu)
