@@ -12,23 +12,6 @@ devices = find_mcu_boards()
 mcu = McuBoard(devices[0])
 peri = PeriBoard(mcu)
 
-def add_profile(userid:str ,name:str, surname:str):
-    # to add new profile
-    with open('./data/profile.json') as f:
-        s = f.read()
-        ss = json.loads(s)
-    check = {
-        id_key : userid,
-        name_key : name,
-        surname_key : surname,
-        status_key : False
-    }
-    ss.append(check)
-    json_ob = json.dumps(ss)
-    output_file = open('./data/profile.json','w')
-    output_file.write(json_ob)
-    output_file.close
-
 #update count file
 def count_write(count : int):
     output_file = open('./data/count.txt','w')
@@ -75,13 +58,6 @@ while True:
                 if(sta[i] == False):
                     sta[i] = True
 
-                    #write to servo
-                    print("open")
-                    mcu.usb_write(request=1,value=1)
-                    time.sleep(2) #open for 2 sec
-                    print("close")
-                    mcu.usb_write(request-1,value=0)
-
                     #add new log
                     x = dt.datetime.now()
                     output_file = open('./data/enter.log','a')
@@ -95,10 +71,9 @@ while True:
                     remain_file = open('./data/remaining.txt','w')
                     remain_file.write(str(re))
                     remain_file.closed
-                    count_write(count)
-
-                else : 
-                    sta[i] = False
+                    output_file = open('./data/count.txt','w')
+                    output_file.write(str(count))
+                    output_file.close
 
                     #write to servo
                     print("open")
@@ -106,6 +81,9 @@ while True:
                     time.sleep(2) #open for sec
                     print("close")
                     mcu.usb_write(request-1,value=0)
+
+                else : 
+                    sta[i] = False
                     
                     #add new log
                     x = dt.datetime.now()
@@ -120,7 +98,16 @@ while True:
                     remain_file = open('./data/remaining.txt','w')
                     remain_file.write(str(re))
                     remain_file.closed
-                    count_write(count) 
+                    output_file = open('./data/count.txt','w')
+                    output_file.write(str(count))
+                    output_file.close
+
+                    #write to servo
+                    print("open")
+                    mcu.usb_write(request=1,value=1)
+                    time.sleep(2) #open for sec
+                    print("close")
+                    mcu.usb_write(request-1,value=0)
 
     except Exception as err:
         print(err)
