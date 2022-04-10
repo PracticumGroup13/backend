@@ -12,12 +12,6 @@ devices = find_mcu_boards()
 mcu = McuBoard(devices[0])
 peri = PeriBoard(mcu)
 
-#update count file
-def count_write(count : int):
-    output_file = open('./data/count.txt','w')
-    output_file.write(str(count))
-    output_file.close
-
 #add_profile("123","what","everS")
 # create list of userrID
 id = []
@@ -36,78 +30,78 @@ for i in range(len(ss)):
 
 timeout = 100      
 start_time = 0
+count = 0
 
 while True:
     try :
-        tmp = mcu.usb_read(request=0, length=1)
-        inp = tmp[0]
+        time.sleep(0.2)
+        tmp = mcu.usb_read(request=0,length=1)
+        #print(tmp)
+        inp = str(tmp[0])
         print(inp)
-        #inp = "123"
-        count = 0
-        for i in range(len(id)):
-            if(i == len(id)-1) and (id[i] != inp):
-                #not a user
-                #add new log
-                x = dt.datetime.now()
-                output_file = open('./data/enter.log','a')
-                output_file.write(x.strftime("%c")+',')
-                output_file.write(" id = "+ inp + ", NOT PASS\n")
-                output_file.close
-
-            elif id[i] == inp :
-                if(sta[i] == False):
-                    sta[i] = True
-
+        re = 30-count
+        remain_file = open('/var/www/html/remaining.txt','w')
+        remain_file.write(str(re))
+        remain_file.closed
+        output_file = open('/var/www/html/count.txt','w')
+        output_file.write(str(count))
+        output_file.close
+        if (inp == "0"):
+            continue
+        else:
+            for i in range(len(id)):
+                if(i == len(id)-1) and (id[i] != inp):
+                    #not a user
+                    print("not a user")
                     #add new log
                     x = dt.datetime.now()
-                    output_file = open('./data/enter.log','a')
+                    output_file = open('/var/www/html/enter.txt','a')
                     output_file.write(x.strftime("%c")+',')
-                    output_file.write(" id = "+ id[i] + ", PASS IN\n")
+                    output_file.write(" id = "+ inp + ", NOT PASS\n")
                     output_file.close
 
-                    #update count and remaining
-                    count += 1
-                    re = 30-count
-                    remain_file = open('./data/remaining.txt','w')
-                    remain_file.write(str(re))
-                    remain_file.closed
-                    output_file = open('./data/count.txt','w')
-                    output_file.write(str(count))
-                    output_file.close
+                elif id[i] == inp :
+                    if(sta[i] == False):
+                        sta[i] = True
+                        print("in")
+                        #add new log
+                        x = dt.datetime.now()
+                        output_file = open('/var/www/html/enter.txt','a')
+                        output_file.write(x.strftime("%c")+',')
+                        output_file.write(" id = "+ id[i] + ", PASS IN\n")
+                        output_file.close
 
-                    #write to servo
-                    print("open")
-                    mcu.usb_write(request=1,value=1)
-                    time.sleep(2) #open for sec
-                    print("close")
-                    mcu.usb_write(request-1,value=0)
+                        #update count and remaining
+                        count += 1
 
-                else : 
-                    sta[i] = False
-                    
-                    #add new log
-                    x = dt.datetime.now()
-                    output_file = open('./data/enter.log','a')
-                    output_file.write(x.strftime("%c")+',')
-                    output_file.write(" id = " + id[i] + ", PASS OUT\n")
-                    output_file.close
+                        #write to servo
+                        print("open")
+                        mcu.usb_write(request=1,value=1)
+                        time.sleep(2) #open for sec
+                        print("close")
+                        mcu.usb_write(request=1,value=0)
+                        break
 
-                    #update count and remaining
-                    count -= 1
-                    re = 30-count
-                    remain_file = open('./data/remaining.txt','w')
-                    remain_file.write(str(re))
-                    remain_file.closed
-                    output_file = open('./data/count.txt','w')
-                    output_file.write(str(count))
-                    output_file.close
+                    else : 
+                        sta[i] = False
+                        print("out")
+                        #add new log
+                        x = dt.datetime.now()
+                        output_file = open('/var/www/html/enter.txt','a')
+                        output_file.write(x.strftime("%c")+',')
+                        output_file.write(" id = " + id[i] + ", PASS OUT\n")
+                        output_file.close
 
-                    #write to servo
-                    print("open")
-                    mcu.usb_write(request=1,value=1)
-                    time.sleep(2) #open for sec
-                    print("close")
-                    mcu.usb_write(request-1,value=0)
+                        #update count and remaining
+                        count -= 1
+
+                        #write to servo
+                        print("open")
+                        mcu.usb_write(request=1,value=1)
+                        time.sleep(2) #open for sec
+                        print("close")
+                        mcu.usb_write(request=1,value=0)
+                        break
 
     except Exception as err:
         print(err)
