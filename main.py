@@ -56,6 +56,12 @@ while True:
                 if(i == len(id)-1) and (id[i] != inp):
                     #not a user
                     print("not a user")
+
+                    #write denied
+                    mcu.usb_write(request=2,value=1)
+                    time.sleep(3) #sleep for 3 sec
+                    mcu.usb_write(request=2,value=0)
+
                     #add new log
                     x = dt.datetime.now()
                     output_file = open('/var/www/html/enter.txt','a')
@@ -112,3 +118,7 @@ while True:
         devices = find_mcu_boards()
         mcu = McuBoard(devices[0])
         peri = PeriBoard(mcu)
+
+
+#{"status": false, "surname": "d", "userID": "53", "name": "c"}
+#{"status": false, "surname": "b", "userID": "65", "name": "a"}
