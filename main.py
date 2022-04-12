@@ -40,12 +40,15 @@ while True:
         inp = str(tmp[0])
         print(inp)
         re = 30-count
+
+        #update count and remaining
         remain_file = open('/var/www/html/remaining.txt','w')
         remain_file.write(str(re))
         remain_file.closed
         output_file = open('/var/www/html/count.txt','w')
         output_file.write(str(count))
         output_file.close
+
         if (inp == "0"):
             continue
         else:
@@ -71,13 +74,13 @@ while True:
                         output_file.write(" id = "+ id[i] + ", PASS IN\n")
                         output_file.close
 
-                        #update count and remaining
+                        #person in count +1
                         count += 1
 
                         #write to servo
                         print("open")
                         mcu.usb_write(request=1,value=1)
-                        time.sleep(2) #open for sec
+                        time.sleep(5) #open for 5 sec
                         print("close")
                         mcu.usb_write(request=1,value=0)
                         break
@@ -92,13 +95,13 @@ while True:
                         output_file.write(" id = " + id[i] + ", PASS OUT\n")
                         output_file.close
 
-                        #update count and remaining
+                        #person out count -1
                         count -= 1
 
                         #write to servo
                         print("open")
                         mcu.usb_write(request=1,value=1)
-                        time.sleep(2) #open for sec
+                        time.sleep(5) #open for 5 sec
                         print("close")
                         mcu.usb_write(request=1,value=0)
                         break
